@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-      minlength: 6,
+      minlength: 8, // aumentado para mayor seguridad
     },
     rol: {
       type: String,
@@ -69,22 +69,23 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
 
 /**
  * Genera un código de verificación de 6 dígitos, lo guarda junto con
- * la fecha de expiración (por ejemplo 30 minutos desde ahora)
+ * la fecha de expiración (30 minutos desde ahora) y marca emailVerified como false
  */
 userSchema.methods.generateEmailVerificationCode = function () {
-  const code = Math.floor(100000 + Math.random() * 900000).toString(); // 6 dígitos
+  const code = Math.floor(100000 + Math.random() * 900000).toString(); // 6 dígitos numéricos
   this.emailVerificationCode = code;
   this.emailVerificationExpires = new Date(Date.now() + 30 * 60 * 1000); // 30 minutos
-  this.emailVerified = false; // Asegurar que esté en false si se genera nuevo código
+  this.emailVerified = false;
   return code;
 };
 
 /**
- * Verifica que el código proporcionado coincida y no haya expirado
+ * Verifica que el código proporcionado coincida y no haya expirado.
+ * Si es válido, marca el email como verificado y guarda el usuario.
  * @param {string} code - código de verificación
- * @returns {boolean} true si es válido, false si no
+ * @returns {Promise<boolean>} true si es válido, false si no
  */
-userSchema.methods.verifyEmailCode = function (code) {
+userSchema.methods.verifyEmailCode = async function (code) {
   if (
     this.emailVerificationCode === code &&
     this.emailVerificationExpires &&
@@ -93,6 +94,7 @@ userSchema.methods.verifyEmailCode = function (code) {
     this.emailVerified = true;
     this.emailVerificationCode = null;
     this.emailVerificationExpires = null;
+    await this.save(); // guardar cambios
     return true;
   }
   return false;
