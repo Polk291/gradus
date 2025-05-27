@@ -197,6 +197,18 @@ exports.enviarCodigoVerificacion = async (req, res) => {
         .json({ mensaje: "El email ya está verificado previamente" });
     }
 
+    // Verifica si ya hay un código vigente
+    if (
+      usuario.emailVerificationCode &&
+      usuario.emailVerificationExpires &&
+      usuario.emailVerificationExpires > Date.now()
+    ) {
+      return res.status(400).json({
+        mensaje:
+          "Ya se ha enviado un código. Espera unos minutos antes de solicitar otro.",
+      });
+    }
+
     const codigo = usuario.generateEmailVerificationCode();
     await usuario.save();
 
@@ -205,6 +217,38 @@ exports.enviarCodigoVerificacion = async (req, res) => {
     res.json({ mensaje: "Código de verificación enviado al email" });
   } catch (error) {
     console.error("Error en enviarCodigoVerificacion:", error);
+    res.status(500).json({ mensaje: "Error en el servidor" });
+  }
+};
+
+// Reenviar código de verificación (genera uno nuevo sin importar si ya hay uno)
+exports.reenviarCodigoVerificacion = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ mensaje: "Email requerido" });
+    }
+
+    const usuario = await Usuario.findOne({ email });
+    if (!usuario) {
+      return res.status(404).json({ mensaje: "Usuario no encontrado" });
+    }
+
+    if (usuario.emailVerified) {
+      return res
+        .status(400)
+        .json({ mensaje: "El email ya está verificado previamente" });
+    }
+
+    const codigo = usuario.generateEmailVerificationCode();
+    await usuario.save();
+
+    await enviarEmailCodigo(email, codigo);
+
+    res.json({ mensaje: "Nuevo código de verificación reenviado al email" });
+  } catch (error) {
+    console.error("Error en reenviarCodigoVerificacion:", error);
     res.status(500).json({ mensaje: "Error en el servidor" });
   }
 };
@@ -229,14 +273,11 @@ exports.verificarCodigoEmail = async (req, res) => {
         .json({ mensaje: "El email ya está verificado previamente" });
     }
 
-    // IMPORTANTE: await porque verifyEmailCode es async
     const esValido = await usuario.verifyEmailCode(codigo);
 
     if (!esValido) {
       return res.status(400).json({ mensaje: "Código inválido o expirado" });
     }
-
-    // Ya guardamos dentro del método verifyEmailCode, no es necesario guardar aquí
 
     res.json({ mensaje: "Email verificado exitosamente" });
   } catch (error) {
@@ -244,10 +285,10 @@ exports.verificarCodigoEmail = async (req, res) => {
     res.status(500).json({ mensaje: "Error en el servidor" });
   }
 };
+
 // Obtener info del usuario autenticado
 exports.obtenerUsuario = async (req, res) => {
   try {
-    // req.usuario debe contener el id del usuario, agregado por validarJWT
     const usuarioId = req.usuario?.id;
 
     if (!usuarioId) {

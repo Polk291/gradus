@@ -1,10 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const { body } = require("express-validator");
+
 const authController = require("../controllers/authController");
 const { validarCampos, validarJWT } = require("../middleware/Validaciones");
 
-// Registro de usuario con validaciones
+// Registro de usuario (genera y envía código de verificación)
 router.post(
   "/register",
   [
@@ -21,7 +22,7 @@ router.post(
   authController.registrarUsuario
 );
 
-// Login de usuario con validaciones
+// Login de usuario
 router.post(
   "/login",
   [
@@ -34,14 +35,21 @@ router.post(
   authController.loginUsuario
 );
 
-// Enviar/re-enviar código de verificación con validación de email
+// Enviar código de verificación (primera vez o reenviar código "controlado")
 router.post(
   "/send-verification-code",
   [body("email").isEmail().withMessage("Email inválido"), validarCampos],
   authController.enviarCodigoVerificacion
 );
 
-// Verificar código enviado por email con validaciones
+// Reenviar código de verificación (genera uno nuevo siempre)
+router.post(
+  "/resend-verification-code",
+  [body("email").isEmail().withMessage("Email inválido"), validarCampos],
+  authController.reenviarCodigoVerificacion
+);
+
+// Verificar código enviado por email
 router.post(
   "/verify-email-code",
   [
@@ -54,19 +62,7 @@ router.post(
   authController.verificarCodigoEmail
 );
 
-// Ruta protegida que devuelve info del usuario autenticado
-router.get("/perfil", validarJWT, async (req, res) => {
-  try {
-    // Puedes buscar el usuario en la DB para retornar más info si quieres
-    const usuario = await authController.obtenerUsuarioPorId(req.usuario.id);
-    if (!usuario) {
-      return res.status(404).json({ mensaje: "Usuario no encontrado" });
-    }
-    res.json({ usuario });
-  } catch (error) {
-    console.error("Error obteniendo perfil:", error);
-    res.status(500).json({ mensaje: "Error en el servidor" });
-  }
-});
+// Ruta protegida para obtener perfil del usuario autenticado
+router.get("/perfil", validarJWT, authController.obtenerUsuario);
 
 module.exports = router;
