@@ -8,7 +8,7 @@ const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
-const allowedOrigin = "https://gradus-landing.vercel.app";
+const allowedOrigin = "https://gradushub.com";
 
 app.use(
   cors({
