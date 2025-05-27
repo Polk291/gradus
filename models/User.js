@@ -28,6 +28,20 @@ const userSchema = new mongoose.Schema(
       enum: ["usuario", "admin"],
       default: "usuario",
     },
+
+    // NUEVOS CAMPOS PARA VALIDACIÓN EMAIL
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationCode: {
+      type: String,
+      default: null,
+    },
+    emailVerificationExpires: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -51,6 +65,37 @@ userSchema.pre("save", async function (next) {
 // Método para comparar contraseña ingresada con la almacenada
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
+};
+
+/**
+ * Genera un código de verificación de 6 dígitos, lo guarda junto con
+ * la fecha de expiración (por ejemplo 30 minutos desde ahora)
+ */
+userSchema.methods.generateEmailVerificationCode = function () {
+  const code = Math.floor(100000 + Math.random() * 900000).toString(); // 6 dígitos
+  this.emailVerificationCode = code;
+  this.emailVerificationExpires = new Date(Date.now() + 30 * 60 * 1000); // 30 minutos
+  this.emailVerified = false; // Asegurar que esté en false si se genera nuevo código
+  return code;
+};
+
+/**
+ * Verifica que el código proporcionado coincida y no haya expirado
+ * @param {string} code - código de verificación
+ * @returns {boolean} true si es válido, false si no
+ */
+userSchema.methods.verifyEmailCode = function (code) {
+  if (
+    this.emailVerificationCode === code &&
+    this.emailVerificationExpires &&
+    this.emailVerificationExpires > Date.now()
+  ) {
+    this.emailVerified = true;
+    this.emailVerificationCode = null;
+    this.emailVerificationExpires = null;
+    return true;
+  }
+  return false;
 };
 
 module.exports = mongoose.model("Usuario", userSchema);
