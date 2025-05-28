@@ -26,6 +26,24 @@ const crearToken = (usuario) => {
 
 // Función real para enviar correo con el código de verificación y diseño moderno
 const enviarEmailCodigo = async (email, codigo) => {
+  if (!email || typeof email !== "string" || !email.includes("@")) {
+    throw new Error("Email inválido o no proporcionado");
+  }
+
+  if (!codigo || typeof codigo !== "string" || codigo.length !== 6) {
+    throw new Error("Código de verificación inválido");
+  }
+
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
+    throw new Error(
+      "Credenciales de correo no configuradas en variables de entorno"
+    );
+  }
+
+  if (!transporter || typeof transporter.sendMail !== "function") {
+    throw new Error("Transporte de correo no configurado correctamente");
+  }
+
   const emailHtml = `
   <!DOCTYPE html>
   <html lang="es">
@@ -83,10 +101,11 @@ const enviarEmailCodigo = async (email, codigo) => {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Correo enviado:", info.messageId);
   } catch (error) {
     console.error("Error enviando email:", error);
-    throw new Error("Error enviando email de verificación");
+    throw new Error(`Error enviando email de verificación: ${error.message}`);
   }
 };
 
@@ -184,26 +203,32 @@ exports.enviarOCodigoVerificacion = async (req, res) => {
   try {
     const { email, forceResend } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ mensaje: "Email requerido" });
+    // Validación de email
+    if (!email || typeof email !== "string" || !email.includes("@")) {
+      return res
+        .status(400)
+        .json({ mensaje: "Email inválido o no proporcionado" });
     }
 
     const usuario = await Usuario.findOne({ email });
     if (!usuario) {
-      return res.status(404).json({ mensaje: "Usuario no encontrado" });
+      return res
+        .status(404)
+        .json({ mensaje: "Usuario no encontrado con ese email" });
     }
 
     if (usuario.emailVerified) {
-      return res
-        .status(400)
-        .json({ mensaje: "El email ya está verificado previamente" });
+      return res.status(400).json({
+        mensaje:
+          "El correo ya fue verificado previamente. No es necesario reenviarlo.",
+      });
     }
 
     const now = Date.now();
     const limitMs = 30 * 1000; // 30 segundos entre reenvíos
 
     if (forceResend) {
-      // Si es reenvío forzado, aplicamos limitador para no abusar
+      // Reenvío forzado con control de frecuencia
       if (resendLimiter.has(email)) {
         const lastSent = resendLimiter.get(email);
         const diff = now - lastSent;
@@ -216,19 +241,27 @@ exports.enviarOCodigoVerificacion = async (req, res) => {
           });
         }
       }
-      // Generar nuevo código y enviar
-      const codigo = usuario.generateEmailVerificationCode();
-      await usuario.save();
 
-      await enviarEmailCodigo(email, codigo);
+      try {
+        const codigo = usuario.generateEmailVerificationCode();
+        await usuario.save();
+        await enviarEmailCodigo(email, codigo);
+        resendLimiter.set(email, now);
 
-      resendLimiter.set(email, now);
-
-      return res.json({
-        mensaje: "Nuevo código de verificación reenviado al email",
-      });
+        return res.json({
+          mensaje:
+            "Nuevo código de verificación reenviado al correo electrónico.",
+        });
+      } catch (err) {
+        console.error("Error enviando email en reenvío forzado:", err);
+        return res
+          .status(500)
+          .json({
+            mensaje: "No se pudo reenviar el código. Intenta más tarde.",
+          });
+      }
     } else {
-      // No es reenvío forzado, es envío inicial o normal
+      // Envío inicial (o envío sin forzar)
       if (
         usuario.emailVerificationCode &&
         usuario.emailVerificationExpires &&
@@ -236,20 +269,28 @@ exports.enviarOCodigoVerificacion = async (req, res) => {
       ) {
         return res.status(400).json({
           mensaje:
-            "Ya se ha enviado un código. Espera unos minutos antes de solicitar otro.",
+            "Ya se ha enviado un código recientemente. Espera unos minutos antes de solicitar otro.",
         });
       }
-      // Generar código y enviar
-      const codigo = usuario.generateEmailVerificationCode();
-      await usuario.save();
 
-      await enviarEmailCodigo(email, codigo);
+      try {
+        const codigo = usuario.generateEmailVerificationCode();
+        await usuario.save();
+        await enviarEmailCodigo(email, codigo);
 
-      return res.json({ mensaje: "Código de verificación enviado al email" });
+        return res.json({
+          mensaje: "Código de verificación enviado al correo electrónico.",
+        });
+      } catch (err) {
+        console.error("Error enviando email en envío normal:", err);
+        return res
+          .status(500)
+          .json({ mensaje: "No se pudo enviar el código. Intenta más tarde." });
+      }
     }
   } catch (error) {
-    console.error("Error en enviarOCodigoVerificacion:", error);
-    res.status(500).json({ mensaje: "Error en el servidor" });
+    console.error("Error general en enviarOCodigoVerificacion:", error);
+    res.status(500).json({ mensaje: "Error interno del servidor" });
   }
 };
 

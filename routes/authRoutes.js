@@ -35,20 +35,24 @@ router.post(
   authController.loginUsuario
 );
 
-// Enviar o reenviar código de verificación (unificado)
 router.post(
   "/verification-code",
   [
     body("email").isEmail().withMessage("Email inválido"),
     body("forceResend")
       .optional()
-      .isBoolean()
-      .withMessage("forceResend debe ser un valor booleano"),
+      .customSanitizer((value) => {
+        // Convertimos a booleano, acepta true/false string o boolean
+        if (typeof value === "boolean") return value;
+        if (typeof value === "string") {
+          return value.toLowerCase() === "true";
+        }
+        return false; // Si no es ninguno, lo ponemos en false
+      }),
     validarCampos,
   ],
   authController.enviarOCodigoVerificacion
 );
-
 // Verificar código enviado por email
 router.post(
   "/verify-email-code",
