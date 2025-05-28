@@ -297,7 +297,6 @@ exports.enviarOCodigoVerificacion = async (req, res) => {
   }
 };
 
-// Verificar código enviado por email
 exports.verificarCodigoEmail = async (req, res) => {
   try {
     const { email, codigo } = req.body;
@@ -323,13 +322,18 @@ exports.verificarCodigoEmail = async (req, res) => {
       return res.status(400).json({ mensaje: "Código inválido o expirado" });
     }
 
+    // Marcar el email como verificado y limpiar campos relacionados
+    usuario.emailVerified = true;
+    usuario.emailVerificationCode = undefined;
+    usuario.emailVerificationExpires = undefined;
+    await usuario.save();
+
     res.json({ mensaje: "Email verificado exitosamente" });
   } catch (error) {
     console.error("Error en verificarCodigoEmail:", error);
     res.status(500).json({ mensaje: "Error en el servidor" });
   }
 };
-
 // Obtener info del usuario autenticado
 exports.obtenerUsuario = async (req, res) => {
   try {
