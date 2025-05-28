@@ -75,7 +75,7 @@ const enviarEmailCodigo = async (email, codigo) => {
           <tr>
             <td style="background: linear-gradient(135deg, #11696B 0%, #1ea39a 100%); padding: 50px 0; text-align: center;">
               <img 
-                src="https://res.cloudinary.com/dyekkggot/image/upload/v1748449083/logo-f_ssgyu6.png" 
+                src="https://res.cloudinary.com/dyekkggot/image/upload/v1748450535/logo-removebg-preview_mktana.png" 
                 alt="Logo Gradus" 
                 width="140" 
                 style="display: block; margin: 0 auto 15px auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.3s ease;"
