@@ -26,12 +26,7 @@ connectDB();
 app.get("/", (req, res) => {
   res.send("API funcionando correctamente");
 });
-app.get("/test-env", (req, res) => {
-  res.json({
-    gmailUser: process.env.GMAIL_USER ? "OK" : "NO SET",
-    gmailPass: process.env.GMAIL_PASS ? "OK" : "NO SET",
-  });
-});
+
 
 // Usar rutas
 app.use("/api/v1/auth", authRoutes);

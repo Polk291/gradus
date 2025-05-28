@@ -34,7 +34,7 @@ const enviarEmailCodigo = async (email, codigo) => {
     throw new Error("Código de verificación inválido");
   }
 
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_PASSWORD) {
     throw new Error(
       "Credenciales de correo no configuradas en variables de entorno"
     );
@@ -120,7 +120,7 @@ exports.registrarUsuario = async (req, res) => {
     }
 
     // Validar credenciales de email antes de crear usuario
-    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASSWORD) {
       return res.status(500).json({
         mensaje:
           "Error en servidor: Credenciales de correo no configuradas correctamente",
