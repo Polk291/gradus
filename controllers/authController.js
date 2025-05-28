@@ -178,9 +178,11 @@ exports.loginUsuario = async (req, res) => {
 };
 
 // Enviar/reenviar código de verificación al email
-exports.enviarCodigoVerificacion = async (req, res) => {
+const resendLimiter = new Map();
+
+exports.enviarOCodigoVerificacion = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, forceResend } = req.body;
 
     if (!email) {
       return res.status(400).json({ mensaje: "Email requerido" });
@@ -197,58 +199,56 @@ exports.enviarCodigoVerificacion = async (req, res) => {
         .json({ mensaje: "El email ya está verificado previamente" });
     }
 
-    // Verifica si ya hay un código vigente
-    if (
-      usuario.emailVerificationCode &&
-      usuario.emailVerificationExpires &&
-      usuario.emailVerificationExpires > Date.now()
-    ) {
-      return res.status(400).json({
-        mensaje:
-          "Ya se ha enviado un código. Espera unos minutos antes de solicitar otro.",
+    const now = Date.now();
+    const limitMs = 30 * 1000; // 30 segundos entre reenvíos
+
+    if (forceResend) {
+      // Si es reenvío forzado, aplicamos limitador para no abusar
+      if (resendLimiter.has(email)) {
+        const lastSent = resendLimiter.get(email);
+        const diff = now - lastSent;
+
+        if (diff < limitMs) {
+          const retryAfter = Math.ceil((limitMs - diff) / 1000);
+          return res.status(429).json({
+            mensaje: `Espera ${retryAfter} segundos antes de reenviar el código.`,
+            retryAfter,
+          });
+        }
+      }
+      // Generar nuevo código y enviar
+      const codigo = usuario.generateEmailVerificationCode();
+      await usuario.save();
+
+      await enviarEmailCodigo(email, codigo);
+
+      resendLimiter.set(email, now);
+
+      return res.json({
+        mensaje: "Nuevo código de verificación reenviado al email",
       });
+    } else {
+      // No es reenvío forzado, es envío inicial o normal
+      if (
+        usuario.emailVerificationCode &&
+        usuario.emailVerificationExpires &&
+        usuario.emailVerificationExpires > now
+      ) {
+        return res.status(400).json({
+          mensaje:
+            "Ya se ha enviado un código. Espera unos minutos antes de solicitar otro.",
+        });
+      }
+      // Generar código y enviar
+      const codigo = usuario.generateEmailVerificationCode();
+      await usuario.save();
+
+      await enviarEmailCodigo(email, codigo);
+
+      return res.json({ mensaje: "Código de verificación enviado al email" });
     }
-
-    const codigo = usuario.generateEmailVerificationCode();
-    await usuario.save();
-
-    await enviarEmailCodigo(email, codigo);
-
-    res.json({ mensaje: "Código de verificación enviado al email" });
   } catch (error) {
-    console.error("Error en enviarCodigoVerificacion:", error);
-    res.status(500).json({ mensaje: "Error en el servidor" });
-  }
-};
-
-// Reenviar código de verificación (genera uno nuevo sin importar si ya hay uno)
-exports.reenviarCodigoVerificacion = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ mensaje: "Email requerido" });
-    }
-
-    const usuario = await Usuario.findOne({ email });
-    if (!usuario) {
-      return res.status(404).json({ mensaje: "Usuario no encontrado" });
-    }
-
-    if (usuario.emailVerified) {
-      return res
-        .status(400)
-        .json({ mensaje: "El email ya está verificado previamente" });
-    }
-
-    const codigo = usuario.generateEmailVerificationCode();
-    await usuario.save();
-
-    await enviarEmailCodigo(email, codigo);
-
-    res.json({ mensaje: "Nuevo código de verificación reenviado al email" });
-  } catch (error) {
-    console.error("Error en reenviarCodigoVerificacion:", error);
+    console.error("Error en enviarOCodigoVerificacion:", error);
     res.status(500).json({ mensaje: "Error en el servidor" });
   }
 };

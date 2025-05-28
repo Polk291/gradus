@@ -35,18 +35,18 @@ router.post(
   authController.loginUsuario
 );
 
-// Enviar código de verificación (primera vez o reenviar código "controlado")
+// Enviar o reenviar código de verificación (unificado)
 router.post(
-  "/send-verification-code",
-  [body("email").isEmail().withMessage("Email inválido"), validarCampos],
-  authController.enviarCodigoVerificacion
-);
-
-// Reenviar código de verificación (genera uno nuevo siempre)
-router.post(
-  "/resend-verification-code",
-  [body("email").isEmail().withMessage("Email inválido"), validarCampos],
-  authController.reenviarCodigoVerificacion
+  "/verification-code",
+  [
+    body("email").isEmail().withMessage("Email inválido"),
+    body("forceResend")
+      .optional()
+      .isBoolean()
+      .withMessage("forceResend debe ser un valor booleano"),
+    validarCampos,
+  ],
+  authController.enviarOCodigoVerificacion
 );
 
 // Verificar código enviado por email
