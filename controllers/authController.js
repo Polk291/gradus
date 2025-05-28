@@ -47,60 +47,143 @@ const enviarEmailCodigo = async (email, codigo) => {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Verificación de Email - Gradus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    @media only screen and (max-width: 600px) {
+      .container {
+        width: 100% !important;
+      }
+      .code-box {
+        padding: 15px 30px !important;
+        font-size: 24px !important;
+      }
+    }
+  </style>
 </head>
-<body style="margin:0; padding:0; background-color:#f8f5f1; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color:#11696B;">
+<body style="margin:0; padding:0; background-color:#f8f5f1; font-family: 'Poppins', Arial, sans-serif; color:#2d3748;">
+  <!-- Preheader text (visible en lista de correos) -->
+  <div style="display: none; max-height: 0px; overflow: hidden;">
+    Completa tu registro en Gradus con este código de verificación: ${codigo}
+  </div>
+
   <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background-color:#f8f5f1; padding: 40px 10px;">
     <tr>
       <td align="center">
-        <table width="420" cellpadding="0" cellspacing="0" role="presentation" style="background-color:#ffffff; border-radius:12px; box-shadow: 0 8px 24px rgba(17,105,107,0.2); overflow:hidden;">
+        <!-- Contenedor principal -->
+        <table class="container" width="480" cellpadding="0" cellspacing="0" role="presentation" style="background-color:#ffffff; border-radius:16px; box-shadow: 0 10px 30px rgba(17,105,107,0.1); overflow:hidden; border: 1px solid rgba(0,0,0,0.05); margin-bottom: 20px;">
+          <!-- Header con gradiente -->
           <tr>
-            <td style="background-color:#11696B; padding: 40px 0; text-align: center;">
+            <td style="background: linear-gradient(135deg, #11696B 0%, #1ea39a 100%); padding: 50px 0; text-align: center;">
               <img 
                 src="https://res.cloudinary.com/dyekkggot/image/upload/v1748405749/logo_drorqm.png" 
                 alt="Logo Gradus" 
                 width="140" 
-                style="display: block; margin: 0 auto 15px auto; object-fit: contain;"
+                style="display: block; margin: 0 auto 15px auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.3s ease;"
               />
-              <h1 style="color:#f8f5f1; font-size: 28px; font-weight: 700; margin: 0; letter-spacing: 1px;">
-                Verificación de Email
+              <h1 style="color:#ffffff; font-size: 28px; font-weight: 700; margin: 0; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                Verifica tu correo electrónico
               </h1>
             </td>
           </tr>
+          
+          <!-- Contenido principal -->
           <tr>
-            <td style="padding: 40px 40px 60px 40px; text-align: center;">
-              <p style="font-size: 20px; margin: 0 0 12px 0; font-weight: 600;">
-                ¡Hola!
+            <td style="padding: 50px 40px; text-align: center;">
+              <!-- SVG moderno de verificación -->
+              <div style="margin-bottom: 25px;">
+                <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="40" cy="40" r="38" fill="url(#paint0_linear)" stroke="#11696B" stroke-width="2"/>
+                  <path d="M25 40L35 50L55 30" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M40 55C48.2843 55 55 48.2843 55 40C55 31.7157 48.2843 25 40 25C31.7157 25 25 31.7157 25 40C25 48.2843 31.7157 55 40 55Z" stroke="white" stroke-width="2"/>
+                  <path d="M40 20V25" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M29.3936 27.6367L32.7279 30.971" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M20 40H25" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M29.3936 52.3633L32.7279 49.029" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M40 55V60" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M50.6064 52.3633L47.2721 49.029" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M55 40H60" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M50.6064 27.6367L47.2721 30.971" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                  <defs>
+                    <linearGradient id="paint0_linear" x1="40" y1="2" x2="40" y2="78" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#11696B"/>
+                      <stop offset="1" stop-color="#1ea39a"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+              
+              <p style="font-size: 18px; margin: 0 0 15px 0; font-weight: 500; color:#4a5568;">
+                ¡Estás a un paso de comenzar con <strong style="color:#11696B;">Gradus</strong>!
               </p>
-              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 30px 0;">
-                Usa el siguiente código para verificar tu correo electrónico en <strong>Gradus</strong>:
+              
+              <p style="font-size: 16px; line-height: 1.6; margin: 0 0 30px 0; color:#4a5568;">
+                Introduce este código en la aplicación para verificar tu correo electrónico:
               </p>
-              <div style="
+              
+              <!-- Código con efecto hover -->
+              <div class="code-box" style="
                 display: inline-block;
                 background: linear-gradient(135deg, #11696B, #1ea39a);
                 padding: 20px 50px;
                 font-size: 32px;
-                font-weight: 800;
-                color: #f8f5f1;
+                font-weight: 700;
+                color: #ffffff;
                 border-radius: 12px;
-                letter-spacing: 10px;
-                box-shadow: 0 4px 12px rgba(17,105,107,0.4);
+                letter-spacing: 8px;
+                box-shadow: 0 6px 16px rgba(17,105,107,0.2);
                 user-select: none;
                 font-family: 'Courier New', Courier, monospace;
+                margin: 0 auto;
+                transition: all 0.3s ease;
+                cursor: pointer;
               ">
                 ${codigo}
               </div>
-              <p style="margin-top: 40px; font-size: 14px; color: #666; max-width: 320px; margin-left: auto; margin-right: auto;">
-                Este código expirará en 30 minutos.<br/>
-                Si no solicitaste este correo, puedes ignorarlo.
+              
+              <!-- Tiempo de expiración con animación -->
+              <div style="margin-top: 40px; background-color: #f8f9fa; padding: 12px; border-radius: 8px; display: inline-block;">
+                <p style="margin: 0; font-size: 14px; color: #718096; display: flex; align-items: center; justify-content: center;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
+                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#718096" stroke-width="2"/>
+                    <path d="M12 6V12L16 14" stroke="#718096" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                  Este código expirará en <strong style="color:#11696B; margin-left: 4px;">30 minutos</strong>
+                </p>
+              </div>
+              
+              <!-- Botón de acción alternativo -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 30px auto;">
+                <tr>
+                  <td style="border-radius: 8px; background: #11696B; text-align: center;">
+                    <a href="#" style="background: #11696B; border: 1px solid #11696B; border-radius: 8px; color: #ffffff; font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 500; line-height: 1.5; padding: 12px 24px; text-decoration: none; display: inline-block;">Copiar código</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="margin-top: 20px; font-size: 14px; color: #a0aec0; max-width: 320px; margin-left: auto; margin-right: auto;">
+                Si no solicitaste este correo, puedes ignorarlo con toda seguridad.
               </p>
             </td>
           </tr>
+          
+          <!-- Footer -->
           <tr>
-            <td style="background-color:#f0f0f0; padding: 20px; text-align: center; font-size: 12px; color: #999;">
-              © 2025 Gradus. Todos los derechos reservados.
+            <td style="background-color:#f0f2f5; padding: 25px; text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #718096;">
+                © 2025 Gradus. Todos los derechos reservados.
+              </p>
+              <p style="margin: 10px 0 0 0; font-size: 12px; color: #718096;">
+                <a href="#" style="color: #11696B; text-decoration: none;">Política de privacidad</a> • 
+                <a href="#" style="color: #11696B; text-decoration: none;">Términos de servicio</a>
+              </p>
             </td>
           </tr>
         </table>
+        
+        <!-- Mensaje para clientes de correo que no soportan HTML -->
+        <div style="display: none; max-height: 0px; overflow: hidden;">
+          Tu código de verificación para Gradus es: ${codigo} (Válido por 30 minutos)
+        </div>
       </td>
     </tr>
   </table>
