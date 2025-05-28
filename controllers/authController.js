@@ -114,7 +114,6 @@ exports.registrarUsuario = async (req, res) => {
   try {
     const { nombre, email, password } = req.body;
 
-    // Validación básica de datos
     if (!nombre || !email || !password) {
       return res.status(400).json({ mensaje: "Faltan datos requeridos" });
     }
@@ -127,11 +126,16 @@ exports.registrarUsuario = async (req, res) => {
     const nuevoUsuario = new Usuario({ nombre, email, password });
 
     const codigo = nuevoUsuario.generateEmailVerificationCode();
+    console.log("Código generado:", codigo);
+
     await nuevoUsuario.save();
+    console.log("Usuario guardado en BD");
 
     await enviarEmailCodigo(email, codigo);
+    console.log("Email de código enviado");
 
     const token = crearToken(nuevoUsuario);
+    console.log("Token creado");
 
     res.status(201).json({
       mensaje:
@@ -254,11 +258,9 @@ exports.enviarOCodigoVerificacion = async (req, res) => {
         });
       } catch (err) {
         console.error("Error enviando email en reenvío forzado:", err);
-        return res
-          .status(500)
-          .json({
-            mensaje: "No se pudo reenviar el código. Intenta más tarde.",
-          });
+        return res.status(500).json({
+          mensaje: "No se pudo reenviar el código. Intenta más tarde.",
+        });
       }
     } else {
       // Envío inicial (o envío sin forzar)
