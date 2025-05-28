@@ -73,7 +73,7 @@ const enviarEmailCodigo = async (email, codigo) => {
         <table class="container" width="480" cellpadding="0" cellspacing="0" role="presentation" style="background-color:#ffffff; border-radius:16px; box-shadow: 0 10px 30px rgba(17,105,107,0.1); overflow:hidden; border: 1px solid rgba(0,0,0,0.05); margin-bottom: 20px;">
           <!-- Header con gradiente -->
           <tr>
-            <td style="background: linear-gradient(135deg, #11696B 0%, #1ea39a 100%); padding: 50px 0; text-align: center;">
+            <td style="background: linear-gradient(135deg, #f8f5f1 0%, #d6cfc8 50%, #bfb9b1 100%); padding: 50px 0; text-align: center;">
               <img 
                 src="https://res.cloudinary.com/dyekkggot/image/upload/v1748450535/logo-removebg-preview_mktana.png" 
                 alt="Logo Gradus" 
