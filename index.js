@@ -8,15 +8,14 @@ const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
-// const allowedOrigin = "https://gradushub.com";
+const allowedOrigin = "https://gradushub.com";
 
 app.use(
-  cors()
-  //   {
-  //   origin: allowedOrigin,
-  //   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  //   allowedHeaders: ["Content-Type", "Authorization"],
-  // }
+  cors({
+    origin: allowedOrigin,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
 );
 
 app.use(express.json());
