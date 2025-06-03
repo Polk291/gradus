@@ -692,7 +692,10 @@ exports.actualizarPerfilAcademico = async (req, res) => {
   }
 };
 
-const resendRecuperacionLimiter = new Map(); // Limitador en memoria (puede usarse Redis en producción)
+const resendRecuperacionLimiter = new Map();
+const generarCodigo = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}; // Limitador en memoria (puede usarse Redis en producción)
 
 exports.enviarCodigoRecuperacion = async (req, res) => {
   try {
