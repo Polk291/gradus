@@ -691,3 +691,145 @@ exports.actualizarPerfilAcademico = async (req, res) => {
     res.status(500).json({ mensaje: "Error del servidor" });
   }
 };
+
+const resendRecuperacionLimiter = new Map(); // Limitador en memoria (puede usarse Redis en producción)
+
+exports.enviarCodigoRecuperacion = async (req, res) => {
+  try {
+    const { email, forceResend } = req.body;
+
+    if (!email || typeof email !== "string") {
+      return res.status(400).json({ mensaje: "Email es requerido." });
+    }
+
+    const usuario = await Usuario.findOne({ email });
+    if (!usuario) {
+      return res
+        .status(404)
+        .json({ mensaje: "No se encontró un usuario con ese email." });
+    }
+
+    const now = Date.now();
+    const limitMs = 30 * 1000; // 30 segundos
+
+    if (forceResend) {
+      if (resendRecuperacionLimiter.has(email)) {
+        const lastSent = resendRecuperacionLimiter.get(email);
+        const diff = now - lastSent;
+
+        if (diff < limitMs) {
+          const retryAfter = Math.ceil((limitMs - diff) / 1000);
+          return res.status(429).json({
+            mensaje: `Espera ${retryAfter} segundos antes de reenviar el código.`,
+            retryAfter,
+          });
+        }
+      }
+
+      // Reenvío forzado: generar nuevo código
+      const codigo = generarCodigo();
+      usuario.codigoRecuperacion = codigo;
+      usuario.expiraCodigoRecuperacion = new Date(now + 30 * 60 * 1000); // 30 min
+      await usuario.save();
+
+      await enviarEmailCodigo(email, codigo);
+
+      resendRecuperacionLimiter.set(email, now);
+
+      return res.json({ mensaje: "Nuevo código de recuperación reenviado." });
+    } else {
+      // Envío inicial o estándar
+      if (
+        usuario.codigoRecuperacion &&
+        usuario.expiraCodigoRecuperacion &&
+        usuario.expiraCodigoRecuperacion > now
+      ) {
+        return res.status(400).json({
+          mensaje:
+            "Ya se ha enviado un código de recuperación. Espera unos minutos antes de solicitar otro.",
+        });
+      }
+
+      const codigo = generarCodigo();
+      usuario.codigoRecuperacion = codigo;
+      usuario.expiraCodigoRecuperacion = new Date(now + 30 * 60 * 1000); // 30 min
+      await usuario.save();
+
+      await enviarEmailCodigo(email, codigo);
+
+      return res.json({
+        mensaje: "Código de recuperación enviado exitosamente al email.",
+      });
+    }
+  } catch (error) {
+    console.error("Error al enviar código de recuperación:", error);
+    return res
+      .status(500)
+      .json({ mensaje: "Ocurrió un error al enviar el código." });
+  }
+};
+exports.verificarCodigoRecuperacion = async (req, res) => {
+  try {
+    const { email, codigo } = req.body;
+
+    if (!email || !codigo) {
+      return res.status(400).json({ mensaje: "Email y código requeridos." });
+    }
+
+    const usuario = await Usuario.findOne({ email });
+    if (!usuario) {
+      return res.status(404).json({ mensaje: "Usuario no encontrado." });
+    }
+
+    const esValido = await usuario.verificarCodigoRecuperacion(codigo);
+
+    if (!esValido) {
+      return res.status(400).json({ mensaje: "Código inválido o expirado." });
+    }
+
+    return res.json({ mensaje: "Código verificado correctamente." });
+  } catch (error) {
+    console.error("Error al verificar código de recuperación:", error);
+    res.status(500).json({ mensaje: "Error en el servidor." });
+  }
+};
+
+exports.restablecerPassword = async (req, res) => {
+  try {
+    const { email, codigo, nuevaPassword } = req.body;
+
+    if (!email || !codigo || !nuevaPassword) {
+      return res
+        .status(400)
+        .json({ mensaje: "Todos los campos son obligatorios." });
+    }
+
+    const usuario = await Usuario.findOne({ email });
+
+    if (
+      !usuario ||
+      !usuario.codigoRecuperacion ||
+      !usuario.expiraCodigoRecuperacion ||
+      usuario.codigoRecuperacion !== codigo ||
+      usuario.expiraCodigoRecuperacion < Date.now()
+    ) {
+      return res
+        .status(400)
+        .json({ mensaje: "El código es inválido o ha expirado." });
+    }
+
+    // Asignar la nueva contraseña
+    usuario.password = nuevaPassword;
+
+    // Limpiar campos de recuperación
+    usuario.codigoRecuperacion = null;
+    usuario.expiraCodigoRecuperacion = null;
+
+    await usuario.save();
+
+    res.json({ mensaje: "Contraseña restablecida exitosamente." });
+  } catch (error) {
+    console.error("Error al restablecer contraseña:", error);
+    res.status(500).json({ mensaje: "Error interno del servidor." });
+  }
+};

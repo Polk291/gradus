@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 
 const userSchema = new mongoose.Schema(
   {
@@ -39,6 +40,25 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
     emailVerificationExpires: {
+      type: Date,
+      default: null,
+    },
+
+    // Recuperación de contraseña
+    resetPasswordToken: {
+      type: String,
+      default: null,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      default: null,
+    },
+    // Código de recuperación por email
+    codigoRecuperacion: {
+      type: String,
+      default: null,
+    },
+    expiraCodigoRecuperacion: {
       type: Date,
       default: null,
     },
@@ -110,6 +130,40 @@ userSchema.methods.verifyEmailCode = async function (code) {
     this.emailVerified = true;
     this.emailVerificationCode = null;
     this.emailVerificationExpires = null;
+    await this.save();
+    return true;
+  }
+  return false;
+};
+
+// Generar token de recuperación de contraseña
+userSchema.methods.generatePasswordResetToken = function () {
+  const token = crypto.randomBytes(32).toString("hex");
+  this.resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+  this.resetPasswordExpires = new Date(Date.now() + 30 * 60 * 1000);
+  return token;
+};
+
+// Generar código para recuperación (por email)
+userSchema.methods.generateCodigoRecuperacion = function () {
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  this.codigoRecuperacion = code;
+  this.expiraCodigoRecuperacion = new Date(Date.now() + 30 * 60 * 1000);
+  return code;
+};
+
+// Verificar código de recuperación
+userSchema.methods.verificarCodigoRecuperacion = async function (code) {
+  if (
+    this.codigoRecuperacion === code &&
+    this.expiraCodigoRecuperacion &&
+    this.expiraCodigoRecuperacion > Date.now()
+  ) {
+    this.codigoRecuperacion = null;
+    this.expiraCodigoRecuperacion = null;
     await this.save();
     return true;
   }

@@ -5,7 +5,7 @@ const { body } = require("express-validator");
 const authController = require("../controllers/authController");
 const { validarCampos, validarJWT } = require("../middleware/Validaciones");
 
-// Registro de usuario (genera y envía código de verificación)
+// Registro de usuario
 router.post(
   "/register",
   [
@@ -35,6 +35,7 @@ router.post(
   authController.loginUsuario
 );
 
+// Enviar o reenviar código de verificación de email
 router.post(
   "/verification-code",
   [
@@ -42,18 +43,16 @@ router.post(
     body("forceResend")
       .optional()
       .customSanitizer((value) => {
-        // Convertimos a booleano, acepta true/false string o boolean
         if (typeof value === "boolean") return value;
-        if (typeof value === "string") {
-          return value.toLowerCase() === "true";
-        }
-        return false; // Si no es ninguno, lo ponemos en false
+        if (typeof value === "string") return value.toLowerCase() === "true";
+        return false;
       }),
     validarCampos,
   ],
   authController.enviarOCodigoVerificacion
 );
-// Verificar código enviado por email
+
+// Verificar código de email
 router.post(
   "/verify-email-code",
   [
@@ -66,9 +65,55 @@ router.post(
   authController.verificarCodigoEmail
 );
 
-// Ruta protegida para obtener perfil del usuario autenticado
+// 🔐 Ruta protegida para obtener perfil
 router.get("/perfil", validarJWT, authController.obtenerUsuario);
-router.get("/", validarJWT, authController.obtenerPerfilAcademico);
-router.put("/", validarJWT, authController.actualizarPerfilAcademico);
+
+// ✅ NUEVAS RUTAS PARA RECUPERACIÓN DE CONTRASEÑA
+
+// Enviar o reenviar código de recuperación
+router.post(
+  "/password-recovery-code",
+  [
+    body("email").isEmail().withMessage("Email inválido"),
+    body("forceResend")
+      .optional()
+      .customSanitizer((value) => {
+        if (typeof value === "boolean") return value;
+        if (typeof value === "string") return value.toLowerCase() === "true";
+        return false;
+      }),
+    validarCampos,
+  ],
+  authController.enviarCodigoRecuperacion
+);
+
+// Verificar código de recuperación
+router.post(
+  "/verify-recovery-code",
+  [
+    body("email").isEmail().withMessage("Email inválido"),
+    body("codigo")
+      .isLength({ min: 6, max: 6 })
+      .withMessage("El código debe tener 6 dígitos"),
+    validarCampos,
+  ],
+  authController.verificarCodigoRecuperacion
+);
+
+// Restablecer contraseña
+router.post(
+  "/reset-password",
+  [
+    body("email").isEmail().withMessage("Email inválido"),
+    body("codigo")
+      .isLength({ min: 6, max: 6 })
+      .withMessage("El código debe tener 6 dígitos"),
+    body("nuevaPassword")
+      .isLength({ min: 6 })
+      .withMessage("La nueva contraseña debe tener al menos 6 caracteres"),
+    validarCampos,
+  ],
+  authController.restablecerPassword
+);
 
 module.exports = router;
