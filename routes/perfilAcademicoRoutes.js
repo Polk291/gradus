@@ -8,6 +8,6 @@ const { validarJWT } = require("../middleware/Validaciones");
 router.get("/", validarJWT, authController.obtenerPerfilAcademico);
 
 // PUT: Actualizar perfil académico
-router.put("/", validarJWT, authController.actualizarPerfilAcademico);
+router.post("/", validarJWT, authController.actualizarPerfilAcademico);
 
 module.exports = router;
