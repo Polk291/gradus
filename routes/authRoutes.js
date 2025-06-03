@@ -68,5 +68,7 @@ router.post(
 
 // Ruta protegida para obtener perfil del usuario autenticado
 router.get("/perfil", validarJWT, authController.obtenerUsuario);
+router.get("/", validarJWT, authController.obtenerPerfilAcademico);
+router.put("/", validarJWT, authController.actualizarPerfilAcademico);
 
 module.exports = router;

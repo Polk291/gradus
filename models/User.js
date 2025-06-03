@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-      minlength: 8, // aumentado para mayor seguridad
+      minlength: 8,
     },
     rol: {
       type: String,
@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema(
       default: "usuario",
     },
 
-    // NUEVOS CAMPOS PARA VALIDACIÓN EMAIL
+    // Validación de email
     emailVerified: {
       type: Boolean,
       default: false,
@@ -42,13 +42,37 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
+    // Perfil académico
+    perfilAcademico: {
+      nivelAcademico: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      universidad: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      carrera: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      tipoProyecto: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+    },
   },
   {
     timestamps: true,
   }
 );
 
-// Middleware para hashear la contraseña antes de guardar
+// Middleware para hashear la contraseña
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     return next();
@@ -62,29 +86,21 @@ userSchema.pre("save", async function (next) {
   }
 });
 
-// Método para comparar contraseña ingresada con la almacenada
+// Comparar contraseña
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-/**
- * Genera un código de verificación de 6 dígitos, lo guarda junto con
- * la fecha de expiración (30 minutos desde ahora) y marca emailVerified como false
- */
+// Generar código de verificación de email
 userSchema.methods.generateEmailVerificationCode = function () {
-  const code = Math.floor(100000 + Math.random() * 900000).toString(); // 6 dígitos numéricos
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
   this.emailVerificationCode = code;
-  this.emailVerificationExpires = new Date(Date.now() + 30 * 60 * 1000); // 30 minutos
+  this.emailVerificationExpires = new Date(Date.now() + 30 * 60 * 1000);
   this.emailVerified = false;
   return code;
 };
 
-/**
- * Verifica que el código proporcionado coincida y no haya expirado.
- * Si es válido, marca el email como verificado y guarda el usuario.
- * @param {string} code - código de verificación
- * @returns {Promise<boolean>} true si es válido, false si no
- */
+// Verificar código de email
 userSchema.methods.verifyEmailCode = async function (code) {
   if (
     this.emailVerificationCode === code &&
@@ -94,7 +110,7 @@ userSchema.methods.verifyEmailCode = async function (code) {
     this.emailVerified = true;
     this.emailVerificationCode = null;
     this.emailVerificationExpires = null;
-    await this.save(); // guardar cambios
+    await this.save();
     return true;
   }
   return false;

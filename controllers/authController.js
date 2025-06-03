@@ -642,3 +642,52 @@ exports.obtenerUsuario = async (req, res) => {
     res.status(500).json({ mensaje: "Error en el servidor" });
   }
 };
+
+exports.obtenerPerfilAcademico = async (req, res) => {
+  try {
+    const usuario = await Usuario.findById(req.usuario.id).select(
+      "perfilAcademico"
+    );
+
+    if (!usuario) {
+      return res.status(404).json({ mensaje: "Usuario no encontrado" });
+    }
+
+    res.json({ perfilAcademico: usuario.perfilAcademico });
+  } catch (error) {
+    console.error("Error al obtener el perfil académico:", error);
+    res.status(500).json({ mensaje: "Error del servidor" });
+  }
+};
+
+// Actualizar el perfil académico del usuario autenticado
+exports.actualizarPerfilAcademico = async (req, res) => {
+  const { nivelAcademico, universidad, carrera, tipoProyecto } = req.body;
+
+  try {
+    const usuario = await Usuario.findById(req.usuario.id);
+
+    if (!usuario) {
+      return res.status(404).json({ mensaje: "Usuario no encontrado" });
+    }
+
+    // Actualizar campos si fueron enviados
+    if (nivelAcademico !== undefined)
+      usuario.perfilAcademico.nivelAcademico = nivelAcademico;
+    if (universidad !== undefined)
+      usuario.perfilAcademico.universidad = universidad;
+    if (carrera !== undefined) usuario.perfilAcademico.carrera = carrera;
+    if (tipoProyecto !== undefined)
+      usuario.perfilAcademico.tipoProyecto = tipoProyecto;
+
+    await usuario.save();
+
+    res.json({
+      mensaje: "Perfil académico actualizado correctamente",
+      perfilAcademico: usuario.perfilAcademico,
+    });
+  } catch (error) {
+    console.error("Error al actualizar el perfil académico:", error);
+    res.status(500).json({ mensaje: "Error del servidor" });
+  }
+};
