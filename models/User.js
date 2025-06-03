@@ -155,19 +155,12 @@ userSchema.methods.generateCodigoRecuperacion = function () {
   return code;
 };
 
-// Verificar código de recuperación
 userSchema.methods.verificarCodigoRecuperacion = async function (code) {
-  if (
+  return (
     this.codigoRecuperacion === code &&
     this.expiraCodigoRecuperacion &&
     this.expiraCodigoRecuperacion > Date.now()
-  ) {
-    this.codigoRecuperacion = null;
-    this.expiraCodigoRecuperacion = null;
-    await this.save();
-    return true;
-  }
-  return false;
+  );
 };
 
 module.exports = mongoose.model("Usuario", userSchema);
