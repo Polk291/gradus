@@ -5,6 +5,7 @@ const connectDB = require("./config/db");
 
 // Importar rutas
 const authRoutes = require("./routes/authRoutes");
+const perfilAcademicoRoutes = require("./routes/perfilAcademicoRoutes");
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.get("/", (req, res) => {
 
 // Usar rutas
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/perfil-academico", perfilAcademicoRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
