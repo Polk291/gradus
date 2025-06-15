@@ -6,6 +6,7 @@ const connectDB = require("./config/db");
 // Importar rutas
 const authRoutes = require("./routes/authRoutes");
 const perfilAcademicoRoutes = require("./routes/perfilAcademicoRoutes");
+const proyectoRoutes = require("./routes/proyectoRoutes");
 
 const app = express();
 
@@ -31,22 +32,23 @@ app.get("/", (req, res) => {
 // Usar rutas
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/perfil-academico", perfilAcademicoRoutes);
+app.use("/api/v1/proyectos", proyectoRoutes); // <-- Aquí agregas la ruta de proyectos
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en PUERTO: ${PORT}`);
 
   //Cada 4 segundos, hacer petición GET a la URL externa
-  setInterval(async () => {
-    try {
-      const response = await fetch("https://backend-gradus-n2nm.onrender.com");
-      if (response.ok) {
-        console.log("Ping exitoso");
-      } else {
-        console.log("Ping falló con status:", response.status);
-      }
-    } catch (error) {
-      console.error("Error haciendo ping", error.message);
-    }
-  }, 4000);
+  // setInterval(async () => {
+  //   try {
+  //     const response = await fetch("https://backend-gradus-n2nm.onrender.com");
+  //     if (response.ok) {
+  //       console.log("Ping exitoso");
+  //     } else {
+  //       console.log("Ping falló con status:", response.status);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error haciendo ping", error.message);
+  //   }
+  // }, 4000);
 });
