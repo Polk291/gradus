@@ -4,7 +4,7 @@ const proyectoController = require("../controllers/proyectoController");
 const { validarJWT } = require("../middleware/Validaciones");
 
 // POST: Crear o actualizar un proyecto
-router.post("/crear", validarJWT, proyectoController.crearOActualizarProyecto);
+router.post("/", proyectoController.crearOActualizarProyecto);
 
 // GET: Obtener todos los proyectos del usuario autenticado
 router.get(
